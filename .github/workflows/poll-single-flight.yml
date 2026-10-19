@@ -36,7 +36,7 @@ jobs:
       - name: Install locked server dependencies
         working-directory: apps/server
         run: bun install --frozen-lockfile --no-env-file
-      - name: Test polling offline
+      - name: Test polling responses and continuity offline
         working-directory: apps/server
         run: bun --no-env-file test
       - name: Typecheck production and fixture code

@@ -132,7 +132,7 @@ beforeAll(async () => {
     }
     // The fake Wazuh Dashboard URL -- stub an empty-hits response so alert-ingest.ts's
     // immediate poll-on-startup never makes a real network call in this test run.
-    return new Response(JSON.stringify({ hits: { hits: [] } }), {
+    return new Response(JSON.stringify({ timed_out: false, _shards: { total: 1, successful: 1, failed: 0 }, hits: { hits: [] } }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

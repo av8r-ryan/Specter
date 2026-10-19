@@ -11,6 +11,7 @@ import { homedir } from 'os';
 import type { WazuhAlert, AlertStats } from './types';
 import { getSeverityLevel } from './types';
 import { scoreAndAttach } from './scorer';
+import { readWazuhPollResponse } from './poll-response';
 import type { ScoringContext, ScoreBand } from './scorer';
 
 // In-memory alert store (last N alerts only)
@@ -76,17 +77,6 @@ let pollTimer: ReturnType<typeof setInterval> | null = null;
 let pollInFlight = false;
 
 /**
- * Shape of the Wazuh Indexer `_search` response we actually read from.
- * Narrow on purpose -- we only touch `hits.hits[]._source`, everything inside
- * `_source` stays loosely typed since it mirrors whatever Wazuh sends.
- */
-interface WazuhSearchResponse {
-  hits?: {
-    hits?: Array<{ _source: any }>;
-  };
-}
-
-/**
  * Poll Wazuh Indexer for new alerts
  */
 async function pollWazuhIndexer(): Promise<void> {
@@ -135,8 +125,7 @@ async function pollWazuhIndexer(): Promise<void> {
       return;
     }
 
-    const data = await response.json() as WazuhSearchResponse;
-    const hits = data.hits?.hits || [];
+    const hits = await readWazuhPollResponse(response, lastPollTimestamp);
 
     if (hits.length === 0) return;
 
@@ -209,7 +198,7 @@ function startIndexerPolling(): void {
 
   // Initial poll - fetch recent alerts to populate the dashboard
   pollWazuhIndexer().then(() => {
-    console.log(`Initial poll complete (${alerts.length} alerts loaded)`);
+    console.log(`Initial poll attempt finished (${alerts.length} alerts in memory)`);
   });
 }
 
