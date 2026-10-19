@@ -6,6 +6,10 @@ The Bun API binds to `127.0.0.1:4001`; Vite dev and preview bind to
 the API runtime and package manager. The tested Bun Node HTTP compatibility
 layer fails to forward a legitimate Vite WebSocket upgrade. Running that same
 Vite configuration under Node passes the HTTP and WebSocket fixtures.
+The foreground launcher invokes Node explicitly. The existing client scripts
+run Vite through its Node shebang, which ordinary `bun run dev` honors. Do not
+force Vite into Bun with `bun --bun run dev` or `bun path/to/vite`; the actual
+`bun run dev` command is covered by a local stream regression fixture.
 
 This is request admission, not authentication. A client outside a browser can
 supply allowed Host and Origin headers. Reported `X-Authentik-*` identity headers
@@ -132,9 +136,9 @@ shellcheck start-specter.sh
 ```
 
 On this startup-based branch the server has 90 tests, including four policy
-fixtures and five real HTTP/WebSocket child scenarios. The client has 22 tests:
+fixtures and five real HTTP/WebSocket child scenarios. The client has 23 tests:
 17 existing logic tests, two endpoint resolution tests, one mocked ledger caller,
-and actual Vite dev and preview HTTP/WebSocket proxy fixtures. Launcher tests
+and actual Vite dev, preview, and `bun run dev` HTTP/WebSocket proxy fixtures. Launcher tests
 retain the 12 lifecycle cases and add two Node prerequisite cases (a version command returning 127 and an old version). Four
 manager fixtures cover unavailable/failing/old Node version commands and root
 configuration/IPv6 status URLs. Availability checks also reject a missing Node executable. Fixtures use

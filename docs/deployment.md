@@ -10,7 +10,8 @@ containing spaces or shell metacharacters. It must be trusted by the service use
 Bun can be on the service's `PATH`, in that user's `$HOME/.bun/bin`, or in
 `$BUN_INSTALL/bin` (set `BUN_INSTALL` in `.env` for a custom installation).
 Node must also be on the service `PATH`; it runs Vite to avoid the WebSocket
-upgrade failure in the tested Bun 1.3.14 Node HTTP compatibility layer.
+upgrade failure in the tested Bun 1.3.14 Node HTTP compatibility layer. Ordinary
+`bun run dev` honors Vite's Node shebang; do not use `--bun` to force Vite into Bun.
 The launcher stops the other child and exits with a failure if either app exits,
 including an unexpected successful exit, so `Restart=on-failure` restarts the pair.
 A normal `systemctl stop` exits successfully. systemd stops the service's control group.

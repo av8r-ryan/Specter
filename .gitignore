@@ -47,12 +47,10 @@ apps/server/suricata-disable.conf
 # Emitted by `vue-tsc -b` alongside the real vite.config.ts
 apps/client/vite.config.js
 apps/client/vite.config.d.ts
+/apps/server/src/network-policy.js
+/apps/server/src/network-policy.d.ts
 .env.*
 *.bak
 *.bak-*
 *.bak.*
 !.env.example
-
-# Emitted when Vite compiles the shared request policy.
-/apps/server/src/network-policy.js
-/apps/server/src/network-policy.d.ts

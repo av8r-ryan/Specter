@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 
-for (const scenario of ['vite', 'vite-preview']) test(`actual ${scenario} HTTP and WebSocket proxy preserves the boundary`, async () => {
+for (const scenario of ['vite', 'vite-preview', 'vite-command']) test(`actual ${scenario} HTTP and WebSocket proxy preserves the boundary`, async () => {
   const fixture = fileURLToPath(new URL('../../../server/test-fixtures/network.ts', import.meta.url));
   const child = Bun.spawn([process.execPath, '--no-env-file', fixture, scenario], { stdout: 'pipe', stderr: 'pipe' });
   const deadline = setTimeout(() => child.kill(), 12000);

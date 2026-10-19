@@ -119,7 +119,7 @@ try {
     await socket(base, { 'Sec-Fetch-Site': 'cross-site' }, false);
     await socket(base, { Origin: 'http://127.0.0.1:5173' }, true);
     await socket(base, {}, true);
-  } else if (scenario === 'vite' || scenario === 'vite-preview') {
+  } else if (scenario === 'vite' || scenario === 'vite-preview' || scenario === 'vite-command') {
     // Actual Vite config and proxy on custom ephemeral ports. No browser, HMR,
     // outside requests or package auto-install is involved.
     process.env.SPECTER_API_HOST = '127.0.0.1';
@@ -129,7 +129,10 @@ try {
     process.env.CLIENT_PORT = '0';
     process.env.CORS_ALLOWED_ORIGIN = 'http://127.0.0.1:5173';
     const clientRoot = fileURLToPath(new URL('../../client', import.meta.url));
-    const child = Bun.spawn(['node', 'test-fixtures/vite.mjs', scenario === 'vite-preview' ? 'preview' : 'dev'], { cwd: clientRoot, env: process.env, stdout: 'pipe', stderr: 'pipe' });
+    const argv = scenario === 'vite-command'
+      ? [process.execPath, '--no-env-file', 'run', 'dev', '--config', 'test-fixtures/vite-cli.config.ts']
+      : ['node', 'test-fixtures/vite.mjs', scenario === 'vite-preview' ? 'preview' : 'dev'];
+    const child = Bun.spawn(argv, { cwd: clientRoot, env: process.env, stdout: 'pipe', stderr: 'pipe' });
     const errors = new Response(child.stderr).text();
     vite = { close: async () => {
       child.kill();
@@ -142,6 +145,10 @@ try {
       const chunk = await reader.read();
       if (chunk.done) throw new Error('Vite exited without listening');
       output += new TextDecoder().decode(chunk.value);
+    }
+    if (scenario === 'vite-command') {
+      assert.match(output, /FIXTURE_BUN=false/, 'bun run dev must honor Vite Node shebang');
+      assert.ok(Number(output.match(/FIXTURE_NODE=(\d+)/)?.[1]) >= 22);
     }
     const proxied = `http://127.0.0.1:${output.match(/FIXTURE_PORT=(\d+)/)![1]}`;
     assert.equal((await fetch(proxied + '/api/health')).status, 200);
