@@ -7,7 +7,8 @@ and a browser's dismissal set would hide the new alert as well.
 
 ## Current contract
 
-- Indexer polling, the JSONL watcher, and HTTP ingestion all call `addAlerts()`.
+- Indexer polling and `addAlerts()` reserve from the same process-local counter.
+  The JSONL watcher and HTTP ingestion use `addAlerts()`.
 - The server reserves IDs synchronously before asynchronous scoring starts.
   Concurrent batches share one sequence, even if scoring finishes out of order.
 - Incoming `id` values are replaced. Input objects are not mutated.

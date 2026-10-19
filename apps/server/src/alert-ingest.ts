@@ -185,7 +185,13 @@ async function pollWazuhIndexer(): Promise<void> {
     // Update last poll timestamp to the newest alert
     lastPollTimestamp = hits[0]._source.timestamp;
 
-    await addAlerts(newAlerts);
+    // Reserve poll IDs from the same process sequence before scoring.
+    const alertsWithIds = newAlerts.map(alert => ({
+      ...alert,
+      id: nextAlertId++,
+    }));
+
+    storeAlerts(await scoreAndAttach(alertsWithIds, buildScoringContext()));
   } catch (error) {
     console.error('Wazuh Indexer poll error:', error);
   } finally {
@@ -375,7 +381,7 @@ export function getAlertStats(): AlertStats {
 }
 
 /**
- * Shared ingestion path for Indexer polls, JSONL watching, and HTTP ingest.
+ * Shared ingestion path for JSONL watching and HTTP ingest.
  * Returns the stored alerts (scored, with IDs assigned)
  */
 export async function addAlerts(newAlerts: WazuhAlert[]): Promise<WazuhAlert[]> {

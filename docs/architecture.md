@@ -51,7 +51,7 @@ context without that lookup.
 - Fallback: watches JSONL file (`WAZUH_ALERTS_PATH`) for file-based ingest
 - Accepts HTTP POST to `/alerts/ingest` for webhook-based ingest
 - Keeps last 500 alerts in memory
-- All three sources use `addAlerts()` to reserve numeric IDs before scoring;
+- Polling and `addAlerts()` reserve numeric IDs from one counter before scoring;
   IDs are unique for the server process lifetime and are not reused after retention.
   [Alert identity and retention](alert-identities.md) documents restart limits.
 
@@ -119,7 +119,7 @@ context without that lookup.
 ```
 Wazuh Indexer
   → HTTP POST (Dashboard API proxy, every 30s)
-  → alert-ingest.ts (normalizes, reserves IDs through addAlerts(), scores)
+  → alert-ingest.ts (normalizes, reserves IDs from the process counter, scores)
   → in-memory store (last 500 alerts)
   → WebSocket broadcast to all clients
   → Vue reactive state in browser

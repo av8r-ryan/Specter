@@ -96,7 +96,7 @@ The design introduced two capabilities:
 | **Scorer** | `apps/server/src/scorer.ts` | Pure, dependency-free scoring logic. Exports `ScoreVerdict`, `ScoringContext`, `ScoringBackend`, `LocalDeterministicScorer`, `getScoringBackend()`/`registerScoringBackend()` seam, `scoreAndAttach()` helper, and the single documented `SCORER_WEIGHTS` constant. |
 | **Ledger storage** | `apps/server/src/ledger.ts` | Owns the `bun:sqlite` connection, schema migration, and every parameterized query. Exports `createInvestigation`, `appendStep`, `finalizeInvestigation`, `listInvestigations`, `getInvestigation`, `createShareToken`, `resolveShareToken`. No other file touches the DB directly. |
 | **Investigation capture** | `apps/server/src/pai-client.ts` (modified) | Instruments the existing tool-use loop inside `sendChatMessage()` to emit ledger writes as it runs, without changing the function's external signature. Returns `investigationId` in `PAIChatResponse`. |
-| **Ingestion wiring** | `apps/server/src/alert-ingest.ts` (modified) | Calls `scoreAndAttach()` at every alert-entry point (Indexer poll, JSONL watch, HTTP ingest) before `storeAlerts()`, so every alert in the in-memory store carries a `.verdict`. Supplies the scorer's frequency signal via an in-memory lookup closure (no new network calls). |
+| **Ingestion wiring** | `apps/server/src/alert-ingest.ts` (modified) | Calls `scoreAndAttach()` at every alert-entry point (Indexer poll, JSONL watch, HTTP ingest) before memory storage and notification, so every alert in the in-memory store carries a `.verdict`. Supplies the scorer's frequency signal via an in-memory lookup closure (no new network calls). |
 | **Route additions** | `apps/server/src/index.ts` (modified) | `GET /alerts/scored`, `GET /ledger`, `GET /ledger/:id`, `GET /ledger/:id/share`, `GET /ledger/share/:token` — all read-only (except the share-token *creation*, which is additive and idempotent). |
 | **Scorer badge** | `apps/client/src/components/ScorerBadge.vue` | Small pill showing band + score with a hover tooltip listing `reasons`. Dropped into `AlertRow.vue`'s header row. |
 | **Ledger view** | `apps/client/src/components/LedgerView.vue`, `LedgerList.vue`, `LedgerReplay.vue` | List of recent investigations → click through to a replay timeline (alert context → scorer verdict → each step → final analysis → token/duration footer). |
@@ -489,21 +489,22 @@ function buildScoringContext(): ScoringContext {
 }
 ```
 
-All ingestion entry points now call the shared asynchronous `addAlerts()` path:
+All ingestion entry points reserve IDs from the same process-local counter before
+scoring:
 
 | Call site | Current wiring |
 |---|---|
-| `pollWazuhIndexer()` | `await addAlerts(newAlerts)` after normalization |
+| `pollWazuhIndexer()` | Reserve IDs, await scoring, then store and notify |
 | `watchFile()`'s `fs.watch` callback | `addAlerts(newAlerts)` with rejection logging |
 | `POST /alerts/ingest` in `index.ts` | `await addAlerts(alerts)` |
 
-`addAlerts()` reserves process-local numeric IDs synchronously before calling
-`scoreAndAttach()`, then stores and broadcasts the scored objects. The HTTP JSON
+Polling and `addAlerts()` reserve process-local numeric IDs synchronously before calling
+`scoreAndAttach()`, then store and broadcast the scored objects. The HTTP JSON
 shape is unchanged. IDs do not depend on the retained array length, and failed
 scoring can leave gaps. See [alert identity and retention](alert-identities.md)
 for the restart contract and regression fixtures.
 
-`storeAlerts()` itself needs no changes — `verdict` just rides along as an extra property
+`storeAlerts()` carries `verdict` as an extra property
 on each `WazuhAlert` object all the way into the in-memory ring buffer, and from there into
 the existing `{type:'alert', data: alert}` WebSocket broadcast in `index.ts` — satisfying
 "attach `verdict` to the alert broadcast" with no changes to the broadcast code itself.
@@ -593,4 +594,3 @@ Bun ships a Jest-compatible test runner (`bun:test`) — zero new dependencies. 
 - `GET /ledger/not-a-uuid` → `404`, not `500`.
 
 **QA acceptance mapping:** scorer determinism ✅ (scorer.test.ts), ledger persistence + replay ✅ (ledger.test.ts + integration), no-key degradation ✅ (scorer.test.ts + integration), parameterized-query safety ✅ (ledger.test.ts SQLi round-trip test).
-
