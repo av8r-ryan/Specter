@@ -27,9 +27,9 @@ Acceptance criteria:
 
 ## 2. Make connection trust explicit
 
-Problem: the launcher currently disables Node TLS certificate verification for the process, which is broader than trusting a particular Wazuh deployment.
+Original baseline concern: the launcher disabled Node TLS certificate verification for the process, which was broader than trusting a particular Wazuh deployment.
 
-Proposed approach: investigate scoped certificate configuration and document a migration before changing defaults.
+Review the separate [Wazuh transport contribution](https://github.com/CarbeneAI/Specter/pull/6), which proposes scoped certificate verification and migration guidance. Retain these acceptance checks when integrating connection-trust changes; this roadmap does not imply that the original broad override remains in every later composition.
 
 Acceptance criteria:
 
