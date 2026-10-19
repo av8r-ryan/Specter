@@ -3,6 +3,7 @@ name: Alert ingestion
 on:
   push:
     paths:
+      - '.gitignore'
       - 'apps/server/**'
       - 'README.md'
       - 'CLAUDE.md'
@@ -11,6 +12,7 @@ on:
       - '.github/workflows/alert-ingestion.yml'
   pull_request:
     paths:
+      - '.gitignore'
       - 'apps/server/**'
       - 'README.md'
       - 'CLAUDE.md'
