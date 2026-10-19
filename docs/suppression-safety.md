@@ -64,7 +64,7 @@ to verify literal path parsing; any files it creates stay in that temporary dire
 
 The GitHub workflow runs the full server suite and typecheck when server files,
 the workflow, or the related setup documentation change. The integration
-fixtures use an ephemeral loopback HTTP listener and mocked external requests;
+fixtures use an ephemeral HTTP listener accessed through localhost and mocked external requests;
 they do not require a live deployment. `apps/server/bun.lock` records a fresh resolution of the
 server's existing development dependencies for frozen installs. Client
 dependency resolution is unchanged.
