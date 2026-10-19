@@ -37,6 +37,6 @@ jobs:
       - name: Test untrusted Markdown in isolated browser fixtures
         run: bun --no-env-file run test:markdown
       - name: Test existing client logic
-        run: bun --no-env-file test ./src
+        run: bun --no-env-file test
       - name: Build client
         run: bun run build

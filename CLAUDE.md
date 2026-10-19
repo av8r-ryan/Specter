@@ -101,4 +101,6 @@ From `apps/client`, run `bun install --frozen-lockfile`,
 The browser test CLI uses Node.js 22 alongside Bun 1.3.14. Tests mount the real
 component with synthetic data on an isolated loopback fixture and block requests
 after loading. Do not use live services or credentials to run these checks.
+Run `bun --no-env-file test` separately for client logic. The client `bunfig.toml`
+keeps this runner within `src`; browser specs belong to Playwright.
 See `docs/markdown-safety.md` for policy, maintenance, and validation limits.

@@ -36,7 +36,7 @@ cd apps/client
 bun install --frozen-lockfile
 bunx playwright install chromium
 bun --no-env-file run test:markdown
-bun --no-env-file test ./src
+bun --no-env-file test
 bun run build
 ```
 
@@ -50,7 +50,10 @@ model, feed, Wazuh, SSH host, or other integration.
 The 7 Chromium tests cover ordinary Markdown, raw HTML and events, encoded
 unsafe links, namespace and mutation payloads, resource embeds, changed message
 content, and the unsupported-sanitizer path.
-The 17 existing client grouping and mute checks also run with `bun test ./src`.
+The 17 existing client grouping and mute checks run with `bun test`. The client
+`bunfig.toml` limits that runner to `src`; browser specs under `tests/markdown`
+use the separate Playwright command above. This keeps ordinary Bun test discovery
+from executing Playwright hooks under the wrong runner.
 These are focused browser regressions and a client build, not a full security
 audit or verification across every browser. CI runs the same fixture suite on
 Ubuntu. Sanitizer and browser updates still require review.
