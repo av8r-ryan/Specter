@@ -82,8 +82,9 @@ Copy `.env.example` to `.env` and configure. Required:
 
 ## Alert identity
 
-All ingestion sources call `addAlerts()` to reserve process-local IDs before
-asynchronous scoring. Never derive IDs from the bounded alert store length.
+Indexer polling and `addAlerts()` reserve IDs from the same process-local counter
+before asynchronous scoring. JSONL and HTTP ingestion use `addAlerts()`. Never
+derive IDs from the bounded alert store length.
 See [alert identity and retention](docs/alert-identities.md) for tests and restart limits.
 
 ## Severity Levels (Wazuh)
