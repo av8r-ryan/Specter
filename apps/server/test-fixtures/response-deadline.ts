@@ -72,7 +72,8 @@ try{
  const operation=poll?intervals[0]!():models?client.getOllamaModels(`http://127.0.0.1:${server.port}`):client.searchWazuhAlerts({});
  pending.push(operation);operation.then(value=>{result=value;settled=true;});
  await waitFor(()=>!!stream||!!headerRelease||scenario==='models-empty');
- if(poll && compositionMode==='composed-guard'){
+ if(poll && compositionMode==='composed-guard' && !errorCase){
+  assert.equal(settled,false,'guard probe must overlap an active consumed body');
   await intervals[0]!();
   assert.equal(requests,2,'held body must retain the composed single-flight guard');
  }
