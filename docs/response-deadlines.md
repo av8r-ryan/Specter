@@ -30,7 +30,7 @@ Most cases capture the production `30_000` value and accelerate only the native 
 ## Limits and proposed followups
 
 - This policy bounds asynchronous network/body waits. It cannot interrupt synchronous JSON parsing, mapping, scoring, SQLite work or arbitrary callbacks, and is not a whole-poll or whole-chat deadline.
-- Ollama generation keeps its separate existing 30-minute policy and implementation. Generation, Anthropic and SSH paths are outside this change.
+- Ollama generation keeps its existing 30-minute timer, which is cleared when response headers arrive. Its response-body reads remain unbounded by that timer and are outside this contribution. Generation, Anthropic and SSH paths need separate review.
 - No new input-size limit, pagination, durable cursor, lossless-ingestion claim, authentication or destination authorization is introduced.
 - A later maintainer proposal should make model-discovery failure distinct from a valid empty list, define generation/body cancellation separately, and use measured workloads before selecting resource budgets or configurable deadlines.
 - Deployment/proxy compatibility and production capacity require separate evidence. The new CI runs only standard Ubuntu/macOS fixtures.
