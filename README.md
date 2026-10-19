@@ -424,7 +424,7 @@ and limitations before changing the renderer or using a hosted deployment.
 
 Pull requests welcome. Please open an issue first to discuss major changes.
 
-The [proposed contributor roadmap](ROADMAP.md) outlines reliability work and acceptance criteria for maintainer discussion alongside the product roadmap above.
+The [proposed contributor roadmap](ROADMAP.md) outlines reliability work and acceptance criteria for maintainer discussion alongside the product roadmap above. Its connection-trust section identifies the original baseline and links the corresponding contribution for status review.
 
 ## License
 
