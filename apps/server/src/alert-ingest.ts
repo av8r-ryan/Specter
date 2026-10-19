@@ -78,6 +78,7 @@ if (!WAZUH_DASHBOARD_PASSWORD) {
 // Track last poll timestamp to only fetch new alerts
 let lastPollTimestamp: string | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
+let pollInFlight = false;
 
 /**
  * Shape of the Wazuh Indexer `_search` response we actually read from.
@@ -94,6 +95,9 @@ interface WazuhSearchResponse {
  * Poll Wazuh Indexer for new alerts
  */
 async function pollWazuhIndexer(): Promise<void> {
+  // Interval ticks are skipped, never queued, until the entire poll settles.
+  if (pollInFlight) return;
+  pollInFlight = true;
   try {
     const query: any = {
       size: 100,
@@ -184,6 +188,8 @@ async function pollWazuhIndexer(): Promise<void> {
     await addAlerts(newAlerts);
   } catch (error) {
     console.error('Wazuh Indexer poll error:', error);
+  } finally {
+    pollInFlight = false;
   }
 }
 
@@ -191,16 +197,17 @@ async function pollWazuhIndexer(): Promise<void> {
  * Start polling Wazuh Indexer
  */
 function startIndexerPolling(): void {
+  if (pollTimer !== null) return;
   console.log(`Starting Wazuh Indexer polling (${POLL_INTERVAL_MS / 1000}s interval)`);
   console.log('Dashboard API: using the configured Wazuh endpoint');
+
+  // Register once before the initial poll can enter fetch or subscriber code.
+  pollTimer = setInterval(pollWazuhIndexer, POLL_INTERVAL_MS);
 
   // Initial poll - fetch recent alerts to populate the dashboard
   pollWazuhIndexer().then(() => {
     console.log(`Initial poll complete (${alerts.length} alerts loaded)`);
   });
-
-  // Continue polling at interval
-  pollTimer = setInterval(pollWazuhIndexer, POLL_INTERVAL_MS);
 }
 
 /**
