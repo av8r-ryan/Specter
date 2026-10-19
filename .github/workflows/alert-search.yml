@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - apps/server/**
+      - .gitignore
       - docs/alert-search-integrity.md
       - .github/workflows/alert-search.yml
   pull_request:
     paths:
       - apps/server/**
+      - .gitignore
       - docs/alert-search-integrity.md
       - .github/workflows/alert-search.yml
 
