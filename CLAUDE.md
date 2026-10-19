@@ -52,17 +52,17 @@ cd apps/client && bun run dev
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and configure. Required:
-- `WAZUH_DASHBOARD_URL` - Your Wazuh server URL
-- `WAZUH_DASHBOARD_PASSWORD` - Password for the configured Wazuh account
-- `ANTHROPIC_API_KEY` - For AI chat features
-
 Explicitly set `WAZUH_DASHBOARD_USER=alert-reader` as the onboarding example.
 This account is not created by Specter: provision it or choose your own
 least-privileged account with Dashboard console-proxy access to query
 `wazuh-alerts-*`. Its password belongs in `WAZUH_DASHBOARD_PASSWORD`. An unset or
 empty username retains the existing `admin` compatibility fallback. See
 [Wazuh HTTPS trust](docs/wazuh-tls.md).
+
+Copy `.env.example` to `.env` and configure. Required:
+- `WAZUH_DASHBOARD_URL` - Your Wazuh server URL
+- `WAZUH_DASHBOARD_PASSWORD` - Password for the configured Wazuh account
+- `ANTHROPIC_API_KEY` - For AI chat features
 
 ## Key Architecture Notes
 
