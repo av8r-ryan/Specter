@@ -70,7 +70,7 @@ Do not treat the boundary or reported identity headers as authentication.
 
 Copy `.env.example` to `.env` and configure. Required:
 - `WAZUH_DASHBOARD_URL` - Your Wazuh server URL
-- `WAZUH_DASHBOARD_PASSWORD` - Your Wazuh admin password
+- `WAZUH_DASHBOARD_PASSWORD` - Password for the configured Wazuh account
 
 AI configuration is optional for alert ingestion and deterministic scoring.
 `TRIAGE_PROVIDER` selects the Cloud toggle's backend:
