@@ -62,7 +62,19 @@ empty username retains the existing `admin` compatibility fallback. See
 Copy `.env.example` to `.env` and configure. Required:
 - `WAZUH_DASHBOARD_URL` - Your Wazuh server URL
 - `WAZUH_DASHBOARD_PASSWORD` - Password for the configured Wazuh account
-- `ANTHROPIC_API_KEY` - For AI chat features
+
+AI configuration is optional for alert ingestion and deterministic scoring.
+`TRIAGE_PROVIDER` selects the Cloud toggle's backend:
+
+- `claude` (default): set `CLAUDE_CLI_SSH_HOST` to a host with an authenticated
+  Claude CLI. CLI/SSH failure falls back to the configured Ollama service.
+- `ollama`: set `OLLAMA_URL` and `OLLAMA_MODEL` for your local service.
+- `anthropic`: configure `ANTHROPIC_API_KEY` (or `WAZUH_PAI_API_KEY`) for the paid
+  Messages API. An Anthropic key is not required by the other providers.
+
+The Local toggle explicitly selects Ollama. Optional historical correlation uses
+`QUERY_INDEXER_PATH` and `QUERY_INDEXER_ENV`; both must be absolute paths on the
+SSH host. Tilde-prefixed and relative paths are rejected.
 
 ## Key Architecture Notes
 
