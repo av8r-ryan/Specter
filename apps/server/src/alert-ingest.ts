@@ -205,7 +205,7 @@ function startIndexerPolling(): void {
 
   // Initial poll - fetch recent alerts to populate the dashboard
   pollWazuhIndexer().then(() => {
-    console.log(`Initial poll attempt finished (${alerts.length} alerts in memory)`);
+    console.log(`Initial poll complete (attempt finished; ${alerts.length} alerts in memory)`);
   });
 }
 
