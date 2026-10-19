@@ -389,6 +389,8 @@ The architectural case for moving detection and response onto the agent, includi
 
 Pull requests welcome. Please open an issue first to discuss major changes.
 
+The [proposed contributor roadmap](ROADMAP.md) outlines reliability work and acceptance criteria for maintainer discussion alongside the product roadmap above.
+
 ## License
 
 MIT - see [LICENSE](LICENSE)

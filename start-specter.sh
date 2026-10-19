@@ -31,8 +31,8 @@ done
 # descendants. Never stop unrelated Bun processes or kill by listening port.
 server_pid=
 client_pid=
-# Invoked indirectly by the EXIT trap.
-# shellcheck disable=SC2329
+# Invoked indirectly by the EXIT trap; older ShellCheck versions cannot follow it.
+# shellcheck disable=SC2317,SC2329
 cleanup() {
     [[ -z "$server_pid" ]] || kill "$server_pid" 2>/dev/null || true
     [[ -z "$client_pid" ]] || kill "$client_pid" 2>/dev/null || true
