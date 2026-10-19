@@ -24,9 +24,14 @@ This avoids the need for direct access to port 9200 (which is typically localhos
 ```bash
 # In .env:
 WAZUH_DASHBOARD_URL=https://your-wazuh-host
-WAZUH_DASHBOARD_USER=admin
-WAZUH_DASHBOARD_PASSWORD=your-password
+WAZUH_DASHBOARD_USER=alert-reader
+WAZUH_DASHBOARD_PASSWORD=replace-with-alert-reader-password
 ```
+
+`alert-reader` is an example that must be provisioned; Specter does not create
+it. Use a least-privileged account with Dashboard console-proxy access to query
+`wazuh-alerts-*`, and supply that account's password. The existing runtime falls
+back to `admin` when `WAZUH_DASHBOARD_USER` is unset or empty.
 
 **Finding your Wazuh Dashboard URL:**
 - This is the URL you use to access the Wazuh web UI (e.g., `https://192.168.1.100` or `https://wazuh.example.com`)

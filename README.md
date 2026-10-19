@@ -117,7 +117,8 @@ Edit `.env` and set at minimum:
 
 ```bash
 WAZUH_DASHBOARD_URL=https://your-wazuh-server
-WAZUH_DASHBOARD_PASSWORD=your-admin-password
+WAZUH_DASHBOARD_USER=alert-reader
+WAZUH_DASHBOARD_PASSWORD=replace-with-alert-reader-password
 TRIAGE_PROVIDER=claude
 # CLAUDE_CLI_SSH_HOST=user@mac-studio
 # Optional: historical correlation during triage (see below). Both are required
@@ -128,6 +129,12 @@ TRIAGE_PROVIDER=claude
 # OLLAMA_URL=http://localhost:11434
 # OLLAMA_MODEL=gemma4:31b
 ```
+
+`alert-reader` is an example account name, not a built-in user. Provision it or
+choose an existing least-privileged account with Dashboard console-proxy access
+to query `wazuh-alerts-*`. Set the password for the configured account. If
+`WAZUH_DASHBOARD_USER` is unset or empty, the runtime still falls back to `admin`
+for compatibility. See [Wazuh HTTPS trust](docs/wazuh-tls.md) for connection setup.
 
 `TRIAGE_PROVIDER=claude` (the default) does **not** call `api.anthropic.com`. It sshes to the Studio and runs `claude -p` on the existing Claude Max subscription. Set `TRIAGE_PROVIDER=anthropic` only if you intentionally want the paid Messages API (requires `ANTHROPIC_API_KEY` with a non-zero balance).
 
