@@ -48,11 +48,11 @@ From `apps/server`, using Bun 1.3.14:
 
 ```bash
 bun install --frozen-lockfile --no-env-file
-bun test --no-env-file src/suricata-suppression.test.ts
+bun test --no-env-file
 bun run --no-env-file typecheck
 ```
 
-The tests call the production suppression and listing functions. Every
+The suppression fixtures call the production suppression and listing functions. Every
 `Bun.spawn` is replaced with an in-process stub, and local files live in a
 temporary directory. Coverage includes rejection before effects, reason and
 description payloads, old heredoc delimiters already in XML, configured path
@@ -62,8 +62,10 @@ do not establish that a deployment's remote configuration is valid or applied.
 One fixture uses a local POSIX shell with a stub sudo function and a local cat
 to verify literal path parsing; any files it creates stay in that temporary directory.
 
-The focused GitHub workflow runs this suite and the server typecheck when
-server files change. `apps/server/bun.lock` records a fresh resolution of the
+The GitHub workflow runs the full server suite and typecheck when server files,
+the workflow, or the related setup documentation change. The integration
+fixtures use an ephemeral loopback HTTP listener and mocked external requests;
+they do not require a live deployment. `apps/server/bun.lock` records a fresh resolution of the
 server's existing development dependencies for frozen installs. Client
 dependency resolution is unchanged.
 

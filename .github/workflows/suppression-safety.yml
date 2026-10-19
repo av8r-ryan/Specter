@@ -4,10 +4,16 @@ on:
   push:
     paths:
       - 'apps/server/**'
+      - '.env.example'
+      - 'README.md'
+      - 'docs/suppression-safety.md'
       - '.github/workflows/suppression-safety.yml'
   pull_request:
     paths:
       - 'apps/server/**'
+      - '.env.example'
+      - 'README.md'
+      - 'docs/suppression-safety.md'
       - '.github/workflows/suppression-safety.yml'
 
 permissions:
@@ -29,7 +35,7 @@ jobs:
           bun-version: 1.3.14
       - name: Install locked server dependencies
         run: bun install --frozen-lockfile --no-env-file
-      - name: Test suppression without external services
-        run: bun test --no-env-file src/suricata-suppression.test.ts
+      - name: Test server without external services
+        run: bun test --no-env-file
       - name: Typecheck server
         run: bun run --no-env-file typecheck
