@@ -313,7 +313,7 @@ few dozen rows.
 | GET | `/alerts/mutes?includeExpired=1` | List mutes (active by default) |
 | POST | `/alerts/mutes` | Create/refresh a mute (`ruleId`, `srcip`, `reason`, `ttlDays`) |
 | DELETE | `/alerts/mutes` | Unmute (`ruleId`, `srcip`) |
-| GET | `/settings/ollama-models?ollamaUrl=...` | List available Ollama models |
+| GET | `/settings/ollama-models?ollamaUrl=...` | List available Ollama models; see [request/body deadlines](docs/response-deadlines.md) |
 | WS | `/stream` | Real-time alert stream |
 
 ## Manage Script
