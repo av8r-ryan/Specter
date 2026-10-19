@@ -61,6 +61,9 @@ Copy `.env.example` to `.env` and configure. Required:
 
 - Server polls Wazuh Indexer every 30s via Dashboard API proxy (`/api/console/proxy`)
 - WebSocket streams alerts to all connected clients in real-time
+- All ingestion sources call `addAlerts()` to reserve process-local IDs before
+  asynchronous scoring. Never derive IDs from the bounded alert store length.
+  See [alert identity and retention](docs/alert-identities.md) for tests and restart limits.
 - AI chat uses Claude tool use to autonomously search Wazuh Indexer
 - Alert suppression requires SSH access to Suricata/Wazuh hosts
 - `NODE_TLS_REJECT_UNAUTHORIZED=0` needed for Wazuh self-signed certs
