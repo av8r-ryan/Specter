@@ -1,4 +1,4 @@
-name: Wazuh poll single-flight
+name: Wazuh polling continuity
 
 on:
   pull_request:
