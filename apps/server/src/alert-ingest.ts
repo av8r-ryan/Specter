@@ -175,8 +175,8 @@ async function pollWazuhIndexer(): Promise<void> {
       })
       .reverse(); // oldest first for chronological storage
 
-    // Update last poll timestamp to the newest alert
-    lastPollTimestamp = hits[0]._source.timestamp;
+    // Snapshot the candidate, but commit it only after the full batch is stored.
+    const candidateTimestamp = hits[0]._source.timestamp;
 
     // Assign IDs and store
     const alertsWithIds = newAlerts.map((alert, index) => ({
@@ -184,7 +184,11 @@ async function pollWazuhIndexer(): Promise<void> {
       id: alerts.length + index + 1,
     }));
 
-    storeAlerts(await scoreAndAttach(alertsWithIds, buildScoringContext()));
+    const scored = await scoreAndAttach(alertsWithIds, buildScoringContext());
+    commitAlerts(scored);
+    lastPollTimestamp = candidateTimestamp;
+    // Subscriber failure cannot undo storage or make this batch replay.
+    notifyAlerts(scored);
   } catch (error) {
     console.error('Wazuh Indexer poll error:', error);
   } finally {
@@ -264,7 +268,7 @@ function readNewAlerts(filePath: string): WazuhAlert[] {
 /**
  * Store alerts in memory (keeping last MAX_ALERTS)
  */
-function storeAlerts(newAlerts: WazuhAlert[]): void {
+function commitAlerts(newAlerts: WazuhAlert[]): void {
   if (newAlerts.length === 0) return;
 
   alerts.push(...newAlerts);
@@ -273,6 +277,10 @@ function storeAlerts(newAlerts: WazuhAlert[]): void {
   if (alerts.length > MAX_ALERTS) {
     alerts.splice(0, alerts.length - MAX_ALERTS);
   }
+}
+
+function notifyAlerts(newAlerts: WazuhAlert[]): void {
+  if (newAlerts.length === 0) return;
 
   console.log(`Received ${newAlerts.length} alert(s) (${alerts.length} in memory)`);
 
@@ -280,6 +288,12 @@ function storeAlerts(newAlerts: WazuhAlert[]): void {
   if (onAlertsReceived) {
     onAlertsReceived(newAlerts);
   }
+}
+
+// Store and notify an already-scored batch for public and file ingestion.
+function storeAlerts(newAlerts: WazuhAlert[]): void {
+  commitAlerts(newAlerts);
+  notifyAlerts(newAlerts);
 }
 
 /**
