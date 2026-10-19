@@ -4,7 +4,8 @@
 
 - **Bun** v1.0+ - [Install](https://bun.sh)
 - **Wazuh** self-hosted instance with Dashboard API access
-- **Anthropic API key** - [Get one](https://console.anthropic.com)
+- Optional for AI analysis: an authenticated Claude CLI reachable over SSH,
+  a local Ollama service, or an [Anthropic API key](https://console.anthropic.com)
 - Optional: Suricata IDS for SID suppression
 - Optional: SSH key auth to Wazuh/Suricata hosts
 
@@ -34,16 +35,30 @@ WAZUH_DASHBOARD_PASSWORD=your-password
 
 **Self-signed certificates:**
 Wazuh typically uses self-signed certificates. Specter automatically disables TLS verification
-via `NODE_TLS_REJECT_UNAUTHORIZED=0` when running through `manage.sh`.
+via `NODE_TLS_REJECT_UNAUTHORIZED=0` when running through `manage.sh` or
+`start-specter.sh`.
 
 ## Step 3: Configure AI Chat (Optional)
 
-```bash
-# In .env:
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-```
+Alert ingestion and deterministic scoring work without an AI provider. To enable
+chat, choose a provider in the root `.env`:
 
-Without this key, the server will start but the chat panel will return errors.
+| `TRIAGE_PROVIDER` | Required provider setup |
+|-------------------|-------------------------|
+| `claude` (default) | `CLAUDE_CLI_SSH_HOST=user@host` with an authenticated Claude CLI on that host |
+| `ollama` | A running Ollama service; configure `OLLAMA_URL` and `OLLAMA_MODEL` for your installation |
+| `anthropic` | `ANTHROPIC_API_KEY` or `WAZUH_PAI_API_KEY` with access to the paid Messages API |
+
+The Cloud toggle follows `TRIAGE_PROVIDER`; the Local toggle selects Ollama.
+The CLI provider also falls back to Ollama if the SSH/CLI call fails. An Anthropic
+API key is only needed for the `anthropic` provider.
+
+For CLI triage, set `CLAUDE_CLI_BIN` to the executable path on the SSH host if it
+is not `/opt/homebrew/bin/claude`.
+
+For optional historical correlation with the CLI provider, set both `QUERY_INDEXER_PATH` and
+`QUERY_INDEXER_ENV` to absolute paths on the SSH host. Do not use `~` or relative
+paths. See [the README](../README.md#historical-correlation) for details.
 
 ## Step 4: Install Dependencies
 
@@ -59,6 +74,10 @@ cd apps/client && bun install && cd ../..
 ```
 
 Open http://localhost:5173
+
+For a service that runs independently of your terminal, use the foreground
+`start-specter.sh` launcher through one of the systemd templates described in
+[the deployment guide](deployment.md). It loads the checkout's root `.env`.
 
 ## Step 6: Configure Alert Suppression (Optional)
 
