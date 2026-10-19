@@ -32,9 +32,12 @@ WAZUH_DASHBOARD_PASSWORD=your-password
 - This is the URL you use to access the Wazuh web UI (e.g., `https://192.168.1.100` or `https://wazuh.example.com`)
 - Specter uses the API proxy at `/api/console/proxy` to reach the Indexer
 
-**Self-signed certificates:**
-Wazuh typically uses self-signed certificates. Specter automatically disables TLS verification
-via `NODE_TLS_REJECT_UNAUTHORIZED=0` when running through `manage.sh`.
+**Private certificates:**
+Polling and direct search verify the Wazuh HTTPS certificate and hostname by
+default. Configure `WAZUH_CA_FILE` with an absolute path to a trusted PEM CA
+bundle for a private deployment. Both launchers leave process-wide HTTPS
+verification enabled. See [Wazuh HTTPS trust](wazuh-tls.md) for migration,
+the deliberate diagnostic exception, and offline validation.
 
 ## Step 3: Configure AI Chat (Optional)
 

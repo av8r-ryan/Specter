@@ -63,7 +63,8 @@ Copy `.env.example` to `.env` and configure. Required:
 - WebSocket streams alerts to all connected clients in real-time
 - AI chat uses Claude tool use to autonomously search Wazuh Indexer
 - Alert suppression requires SSH access to Suricata/Wazuh hosts
-- `NODE_TLS_REJECT_UNAUTHORIZED=0` needed for Wazuh self-signed certs
+- Wazuh polling and direct search verify HTTPS by default; configure private trust
+  with `WAZUH_CA_FILE`, never a process-wide TLS bypass. See `docs/wazuh-tls.md`.
 
 ## API Endpoints
 
