@@ -93,7 +93,8 @@ SSH host. Tilde-prefixed and relative paths are rejected.
   `pai-client.ts`. CLI triage receives server-fetched history when configured;
   Ollama receives the supplied alert context without that lookup.
 - Alert suppression requires SSH access to Suricata/Wazuh hosts
-- `NODE_TLS_REJECT_UNAUTHORIZED=0` needed for Wazuh self-signed certs
+- Wazuh polling and direct search verify HTTPS by default; configure private trust
+  with `WAZUH_CA_FILE`, never a process-wide TLS bypass. See `docs/wazuh-tls.md`.
 
 ## Validation
 

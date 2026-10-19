@@ -15,7 +15,7 @@ CLIENT_PORT="${CLIENT_PORT:-5173}"
 SPECTER_CLIENT_HOST="${SPECTER_CLIENT_HOST:-127.0.0.1}"
 export PATH="${BUN_INSTALL:-$HOME/.bun}/bin:$PATH"
 # Wazuh dashboard uses a self-signed cert on the LAN.
-export NODE_TLS_REJECT_UNAUTHORIZED=0
+# Configure its trust per Wazuh request; leave unrelated HTTPS verification enabled.
 
 if ! command -v bun >/dev/null 2>&1; then
     echo "Bun not found; install it or set BUN_INSTALL/PATH for the service user." >&2
