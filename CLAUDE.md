@@ -124,6 +124,12 @@ external HTTP calls. Do not use live SIEM, SSH, or model endpoints for these che
 | GET | /alerts/suppressed | List suppressed rules |
 | WS | /stream | WebSocket alert stream |
 
+## Alert identity
+
+All ingestion sources call `addAlerts()` to reserve process-local IDs before
+asynchronous scoring. Never derive IDs from the bounded alert store length.
+See [alert identity and retention](docs/alert-identities.md) for tests and restart limits.
+
 ## Severity Levels (Wazuh)
 
 | Level | Severity |

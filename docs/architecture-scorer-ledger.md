@@ -489,17 +489,19 @@ function buildScoringContext(): ScoringContext {
 }
 ```
 
-Every place that currently calls `storeAlerts(newAlerts)` is updated to score first:
+All ingestion entry points now call the shared asynchronous `addAlerts()` path:
 
-| Call site | Before | After |
-|---|---|---|
-| `pollWazuhIndexer()` (already `async`) | `storeAlerts(alertsWithIds);` | `storeAlerts(await scoreAndAttach(alertsWithIds, buildScoringContext()));` |
-| `watchFile()`'s `fs.watch` callback (sync) | `storeAlerts(newAlerts);` | `scoreAndAttach(newAlerts, buildScoringContext()).then(storeAlerts);` |
-| `addAlerts()` (HTTP ingest, was sync) | `storeAlerts(alertsWithIds); return alertsWithIds;` | becomes `async`: `const scored = await scoreAndAttach(alertsWithIds, buildScoringContext()); storeAlerts(scored); return scored;` |
+| Call site | Current wiring |
+|---|---|
+| `pollWazuhIndexer()` | `await addAlerts(newAlerts)` after normalization |
+| `watchFile()`'s `fs.watch` callback | `addAlerts(newAlerts)` with rejection logging |
+| `POST /alerts/ingest` in `index.ts` | `await addAlerts(alerts)` |
 
-`addAlerts()` becoming `async` is the one non-cosmetic signature change in this feature.
-Its single call site, `POST /alerts/ingest` in `index.ts`, adds one `await`. The HTTP
-contract (request/response JSON shape) is unchanged.
+`addAlerts()` reserves process-local numeric IDs synchronously before calling
+`scoreAndAttach()`, then stores and broadcasts the scored objects. The HTTP JSON
+shape is unchanged. IDs do not depend on the retained array length, and failed
+scoring can leave gaps. See [alert identity and retention](alert-identities.md)
+for the restart contract and regression fixtures.
 
 `storeAlerts()` itself needs no changes — `verdict` just rides along as an extra property
 on each `WazuhAlert` object all the way into the in-memory ring buffer, and from there into
