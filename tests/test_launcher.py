@@ -52,6 +52,7 @@ class LauncherFixture(unittest.TestCase):
         self.bin = self.root / "bin"
         self.bin.mkdir()
         self.make_bun(self.bin)
+        self.make_node()
         self.env = {
             "HOME": str(self.home),
             "PATH": str(self.bin) + ":/usr/bin:/bin",
@@ -75,6 +76,12 @@ class LauncherFixture(unittest.TestCase):
         directory.mkdir(parents=True, exist_ok=True)
         stub = directory / "bun"
         stub.write_text(STUB)
+        stub.chmod(0o755)
+
+    def make_node(self, version="v22.22.2", status=0):
+        stub = self.bin / "node"
+        stub.write_text(STUB.replace('state = Path',
+            f'if sys.argv[1:] == ["--version"]: print({version!r}); sys.exit({status})\nstate = Path'))
         stub.chmod(0o755)
 
     def launch(self):
@@ -119,7 +126,7 @@ class LauncherFixture(unittest.TestCase):
 class LauncherTests(LauncherFixture):
     def test_checkout_and_environment_with_spaces(self):
         (self.checkout / ".env").write_text(
-            "LAUNCHER_TEST_MARKER='loaded from checkout'\nCLIENT_PORT=5317\n"
+            "LAUNCHER_TEST_MARKER='loaded from checkout'\nCLIENT_PORT=5317\nSPECTER_CLIENT_HOST=::1\n"
         )
         self.launch()
         self.ready()
@@ -128,7 +135,7 @@ class LauncherTests(LauncherFixture):
             self.assertEqual(self.record(name)["marker"], "loaded from checkout")
         self.assertEqual(self.record("server")["args"], ["--watch", "src/index.ts"])
         self.assertEqual(self.record("client")["args"],
-                         ["./node_modules/.bin/vite", "--port", "5317", "--host", "0.0.0.0"])
+                         ["./node_modules/vite/bin/vite.js", "--port", "5317", "--host", "::1"])
         self.process.terminate()
         self.finish(0)
         for name in ("server", "client"):
@@ -140,6 +147,7 @@ class LauncherTests(LauncherFixture):
         self.launch()
         self.ready()
         self.assertIn("5173", self.record("client")["args"])
+        self.assertEqual(self.record("client")["args"][-2:], ["--host", "127.0.0.1"])
         self.process.terminate()
         self.finish(0)
 
@@ -157,6 +165,18 @@ class LauncherTests(LauncherFixture):
         (self.bin / "bun").unlink()
         self.launch()
         self.finish(127)
+        self.assertEqual(list(self.state.iterdir()), [])
+
+    def test_unavailable_node_starts_neither_child(self):
+        self.make_node(status=127)
+        self.launch()
+        self.finish(127)
+        self.assertEqual(list(self.state.iterdir()), [])
+
+    def test_old_node_starts_neither_child(self):
+        self.make_node(version="v20.0.0")
+        self.launch()
+        self.finish(1)
         self.assertEqual(list(self.state.iterdir()), [])
 
     def test_invalid_env_starts_neither_child(self):
@@ -216,6 +236,46 @@ class LauncherTests(LauncherFixture):
         self.finish(0)
         for name in ("server", "client"):
             self.assertTrue((self.state / (name + ".stopped")).exists())
+
+
+class ManagerConfigTests(LauncherFixture):
+    def setUp(self):
+        super().setUp()
+        shutil.copy2(ROOT / "manage.sh", self.checkout)
+
+    def run_manager(self, command):
+        return subprocess.run(["/bin/bash", str(self.checkout / "manage.sh"), command],
+                              cwd=self.root, env=self.env, capture_output=True, text=True, timeout=5)
+
+    def test_unavailable_node_starts_neither_child(self):
+        self.make_node(status=127)
+        result = self.run_manager("start")
+        self.assertEqual(result.returncode, 127, result.stderr)
+        self.assertEqual(list(self.state.iterdir()), [])
+
+    def test_old_node_starts_neither_child(self):
+        self.make_node(version="v20.0.0")
+        result = self.run_manager("start")
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertEqual(list(self.state.iterdir()), [])
+
+    def test_failing_node_version_starts_neither_child(self):
+        self.make_node(status=2)
+        result = self.run_manager("start")
+        self.assertEqual(result.returncode, 127, result.stderr)
+        self.assertEqual(list(self.state.iterdir()), [])
+
+    def test_root_env_ports_and_ipv6_status_urls(self):
+        (self.checkout / ".env").write_text(
+            "PORT=4801\nCLIENT_PORT=5417\nSPECTER_API_HOST=::1\nSPECTER_CLIENT_HOST='[::1]'\n")
+        lsof = self.bin / "lsof"
+        lsof.write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$STUB_STATE/lsof-args"\nexit 0\n')
+        lsof.chmod(0o755)
+        result = self.run_manager("status")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("http://[::1]:4801", result.stdout)
+        self.assertIn("http://[::1]:5417", result.stdout)
+        self.assertIn(":4801", (self.state / "lsof-args").read_text())
 
 
 class ServiceTemplateTests(LauncherFixture):

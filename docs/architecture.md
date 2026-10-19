@@ -102,7 +102,8 @@ context without that lookup.
 **`composables/useWebSocket.ts`** - WebSocket client
 - Auto-reconnects on disconnect
 - Ping/pong keepalive every 30s
-- URL from `VITE_WS_URL` env var or `ws://localhost:4001/stream`
+- URL from `VITE_WS_URL` or current-origin `/stream` with `ws:`/`wss:`
+- Shared [endpoint and network policy](network-boundary.md) with API callers
 
 **`composables/usePAIChat.ts`** - Chat state
 - Manages message history

@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- **Bun** v1.0+ - [Install](https://bun.sh)
+- **Bun** v1.3.14 (tested) - [Install](https://bun.sh)
+- **Node.js** 22+ for Vite (22.22.2 tested)
 - **Wazuh** self-hosted instance with Dashboard API access
 - Optional for AI analysis: an authenticated Claude CLI reachable over SSH,
   a local Ollama service, or an [Anthropic API key](https://console.anthropic.com)
@@ -35,8 +36,7 @@ WAZUH_DASHBOARD_PASSWORD=your-password
 
 **Self-signed certificates:**
 Wazuh typically uses self-signed certificates. Specter automatically disables TLS verification
-via `NODE_TLS_REJECT_UNAUTHORIZED=0` when running through `manage.sh` or
-`start-specter.sh`.
+via `NODE_TLS_REJECT_UNAUTHORIZED=0` when running through `manage.sh`.
 
 ## Step 3: Configure AI Chat (Optional)
 
@@ -73,7 +73,11 @@ cd apps/client && bun install && cd ../..
 ./manage.sh start
 ```
 
-Open http://localhost:5173
+Open http://127.0.0.1:5173
+
+Loopback binds and exact browser/Host admission are now the default. Follow
+[the network migration guide](network-boundary.md) for custom ports, remote
+access, and root `.env` browser build settings.
 
 For a service that runs independently of your terminal, use the foreground
 `start-specter.sh` launcher through one of the systemd templates described in
@@ -131,12 +135,15 @@ You can push alerts to Specter via HTTP POST instead of (or in addition to) poll
 
 ```bash
 # POST to ingest endpoint
-curl -X POST http://localhost:4001/alerts/ingest \
+curl -X POST http://127.0.0.1:4001/alerts/ingest \
   -H "Content-Type: application/json" \
   -d '{"timestamp":"2026-01-01T00:00:00Z","rule":{"level":7,"description":"Test alert","id":"1234"},"agent":{"id":"001","name":"my-server"}}'
 ```
 
-In n8n, use an HTTP Request node pointing to `http://specter-host:4001/alerts/ingest`.
+For n8n on this host, use `http://127.0.0.1:4001/alerts/ingest`. Remote n8n
+requires an explicit API bind and exact Host allowlist plus a firewall and
+authenticated proxy. Follow [the remote access steps](network-boundary.md#remote-n8n)
+before pointing another host at the API. Headerless CLI/n8n calls remain supported.
 
 ## Troubleshooting
 

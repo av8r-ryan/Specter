@@ -2,13 +2,15 @@
 
 ## Running as a systemd Service
 
-Install dependencies and configure the checkout's `.env` first. The foreground
+Install Node.js 22+ (22.22.2 tested), Bun, and dependencies, then configure the checkout's `.env` first. The foreground
 launcher, `start-specter.sh`, resolves both apps and `.env` relative to itself,
 regardless of systemd's working directory. `.env` is sourced as Bash: quote values
 containing spaces or shell metacharacters. It must be trusted by the service user.
 
 Bun can be on the service's `PATH`, in that user's `$HOME/.bun/bin`, or in
 `$BUN_INSTALL/bin` (set `BUN_INSTALL` in `.env` for a custom installation).
+Node must also be on the service `PATH`; it runs Vite to avoid the WebSocket
+upgrade failure in the tested Bun 1.3.14 Node HTTP compatibility layer.
 The launcher stops the other child and exits with a failure if either app exits,
 including an unexpected successful exit, so `Restart=on-failure` restarts the pair.
 A normal `systemctl stop` exits successfully. systemd stops the service's control group.
@@ -71,8 +73,8 @@ systemd-managed instances: systemd owns their lifecycle and restart policy.
 
 ### Launcher regression tests
 
-Run `python3 tests/test_launcher.py LauncherTests` and `bash -n start-specter.sh`
-on Linux or macOS. The tests use temporary checkouts and stub Bun processes,
+Run `python3 tests/test_launcher.py LauncherTests ManagerConfigTests` and `bash -n start-specter.sh`
+on Linux or macOS. The tests use temporary checkouts and stub Bun and Node processes,
 including paths with spaces, startup failures, child exits, and shutdown. They
 do not connect to Wazuh, Suricata, SSH, or an AI provider.
 
@@ -84,7 +86,11 @@ tests/build on Linux. The tests do not install or start a systemd service.
 
 ## Reverse Proxy with Nginx
 
-To expose Specter at a domain name with HTTPS:
+The example below uses separate frontend/API origins. For same-origin `/api`
+and `/stream` routing and static hosting, follow [the network guide](network-boundary.md).
+Both patterns require an authenticated proxy and an exact browser/Host policy.
+
+To route Specter at domain names with HTTPS:
 
 ```nginx
 # /etc/nginx/sites-available/specter
@@ -97,7 +103,7 @@ server {
 
     # Client (Vue app)
     location / {
-        proxy_pass http://localhost:5173;
+        proxy_pass http://127.0.0.1:5173;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
@@ -109,7 +115,7 @@ server {
 
     # API + WebSocket
     location / {
-        proxy_pass http://localhost:4001;
+        proxy_pass http://127.0.0.1:4001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -120,11 +126,16 @@ server {
 
 Then update your `.env`:
 ```bash
+CORS_ALLOWED_ORIGIN=https://specter.example.com
+SPECTER_ALLOWED_HOSTS=specter.example.com,specter-api.example.com
 VITE_API_URL=https://specter-api.example.com
 VITE_WS_URL=wss://specter-api.example.com/stream
 ```
 
 ## Reverse Proxy with Traefik
+
+The same split-origin `.env` settings above apply to this Traefik routing example.
+Preserve Host and Origin and configure authentication before remote exposure.
 
 Example Traefik dynamic config:
 
@@ -149,12 +160,12 @@ http:
     specter-client:
       loadBalancer:
         servers:
-          - url: "http://localhost:5173"
+          - url: "http://127.0.0.1:5173"
 
     specter-api:
       loadBalancer:
         servers:
-          - url: "http://localhost:4001"
+          - url: "http://127.0.0.1:4001"
 ```
 
 ## Building for Production
@@ -167,7 +178,10 @@ bun run build
 # Output in apps/client/dist/
 ```
 
-Serve the `dist/` directory with nginx and point `VITE_API_URL`/`VITE_WS_URL` to your production API server before building.
+Serve `dist/` with nginx and route `/api/` and `/stream` to the API as described
+in [the network guide](network-boundary.md). For split-origin hosting, set the
+public `VITE_API_URL`/`VITE_WS_URL` overrides in the root `.env` before building.
+The old deployed `.env.production` defaults have been removed.
 
 ## Security Considerations
 

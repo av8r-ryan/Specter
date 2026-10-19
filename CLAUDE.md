@@ -6,7 +6,7 @@ Specter is a real-time SIEM security dashboard that connects to Wazuh and Surica
 
 ## Tech Stack
 
-- **Runtime**: Bun (NOT Node.js)
+- **Runtime**: Bun API/package manager; Node.js 22+ runs Vite (22.22.2 tested)
 - **Language**: TypeScript
 - **Frontend**: Vue 3 + Vite + Tailwind CSS (CarbeneAI dark theme)
 - **Backend**: Bun HTTP + WebSocket server
@@ -57,6 +57,14 @@ Both launch commands stay in the foreground; run one at a time. For individual
 `bun run dev` sessions, export the root `.env` in each terminal first: Bun is
 started inside an app directory. For systemd installation and service lifecycle
 commands, follow [docs/deployment.md](docs/deployment.md).
+
+All four browser callers use `apps/client/src/lib/endpoints.ts`: `/api` and current-origin
+`/stream` by default. API and Vite dev/preview share exact Host/Origin HTTP admission
+and bind to `127.0.0.1`. API `/stream` upgrades use the same guard after the
+proxy preserves Host and Origin. Vite HMR has its own Host/token checks and is
+disabled in the network fixtures. Read [docs/network-boundary.md](docs/network-boundary.md)
+before changing binds, browser origins, proxy routes, or public `VITE_*` overrides.
+Do not treat the boundary or reported identity headers as authentication.
 
 ## Environment Variables
 

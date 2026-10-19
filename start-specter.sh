@@ -12,6 +12,7 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
     set +a
 fi
 CLIENT_PORT="${CLIENT_PORT:-5173}"
+SPECTER_CLIENT_HOST="${SPECTER_CLIENT_HOST:-127.0.0.1}"
 export PATH="${BUN_INSTALL:-$HOME/.bun}/bin:$PATH"
 # Wazuh dashboard uses a self-signed cert on the LAN.
 export NODE_TLS_REJECT_UNAUTHORIZED=0
@@ -19,6 +20,16 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0
 if ! command -v bun >/dev/null 2>&1; then
     echo "Bun not found; install it or set BUN_INSTALL/PATH for the service user." >&2
     exit 127
+fi
+if ! command -v node >/dev/null 2>&1 || ! node_version="$(node --version)"; then
+    echo "Node.js 22 or later not found; Vite requires Node for WebSocket proxy support." >&2
+    exit 127
+fi
+node_major="${node_version#v}"
+node_major="${node_major%%.*}"
+if [[ ! "$node_major" =~ ^[0-9]+$ ]] || (( node_major < 22 )); then
+    echo "Node.js 22 or later is required for Vite." >&2
+    exit 1
 fi
 for app in server client; do
     if [[ ! -d "$SCRIPT_DIR/apps/$app" ]]; then
@@ -43,7 +54,7 @@ trap 'exit 0' INT TERM
 
 (cd "$SCRIPT_DIR/apps/server" && exec bun --watch src/index.ts) &
 server_pid=$!
-(cd "$SCRIPT_DIR/apps/client" && exec bun ./node_modules/.bin/vite --port "$CLIENT_PORT" --host 0.0.0.0) &
+(cd "$SCRIPT_DIR/apps/client" && exec node ./node_modules/vite/bin/vite.js --port "$CLIENT_PORT" --host "$SPECTER_CLIENT_HOST") &
 client_pid=$!
 
 # A child can exit before we start waiting. Check both PIDs so an immediate

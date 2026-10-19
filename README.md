@@ -84,7 +84,7 @@ Data source identification, pseudo-detection rule generation, and attack pattern
 
 | Component | Technology |
 |-----------|-----------|
-| Runtime | Bun |
+| Runtime | Bun API and package manager; Node.js 22+ for Vite |
 | Frontend | Vue 3 + Vite + Tailwind CSS |
 | Backend | Bun HTTP + WebSocket server |
 | AI | Claude CLI over SSH (default), Ollama (local), or Anthropic API |
@@ -93,7 +93,8 @@ Data source identification, pseudo-detection rule generation, and attack pattern
 
 ## Requirements
 
-- [Bun](https://bun.sh) v1.0+
+- [Bun](https://bun.sh) v1.3.14 (tested)
+- [Node.js](https://nodejs.org) 22+ for Vite (22.22.2 tested)
 - Wazuh SIEM instance (self-hosted)
 - An authenticated Claude CLI reachable over SSH (default triage), **or** [Ollama](https://ollama.com) (local), **or** an [Anthropic API key](https://console.anthropic.com) with credits (`TRIAGE_PROVIDER=anthropic`)
 - SSH access to Suricata/Wazuh hosts (optional, for rule suppression)
@@ -148,7 +149,11 @@ cd ../..
 ./manage.sh start
 ```
 
-Open http://localhost:5173
+Open http://127.0.0.1:5173
+
+The API and Vite bind to loopback by default. See the
+[network boundary and migration guide](docs/network-boundary.md) for root `.env`,
+custom ports, reverse proxies, and remote n8n access. These guards do not provide authentication.
 
 ## Configuration
 
