@@ -89,7 +89,11 @@ try {
     writeFileSync(file, JSON.stringify(alert('existing file content')) + '\n');
     globalThis.fetch = (async (input: string | URL | Request) => {
       assert.match(String(input), /^https:\/\/wazuh\.invalid\.test\/api\/console\/proxy\?/);
-      return Response.json({ hits: { hits: [{ _source: alert('indexer') }] } });
+      return Response.json({
+        timed_out: false,
+        _shards: { total: 1, successful: 1, failed: 0 },
+        hits: { hits: [{ _source: alert('indexer') }] },
+      });
     }) as typeof fetch;
     const broadcast: WazuhAlert[] = [];
     startAlertIngestion(items => broadcast.push(...items));
