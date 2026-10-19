@@ -41,7 +41,7 @@ let fetchCalls = 0;
 let scoreCalls = 0;
 let pendingScore: WazuhAlert[] = [];
 function body(sequence: number) {
-  return { hits: { hits: [{ _source: {
+  return { timed_out: false, _shards: { total: 1, successful: 1, failed: 0 }, hits: { hits: [{ _source: {
     timestamp: `2026-10-19T12:00:0${sequence}.000Z`,
     rule: { id: 'synthetic-rule', level: 7, description: `row ${sequence}` },
     agent: { id: '001', name: 'synthetic-agent' },
@@ -74,9 +74,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (scenario === 'overlap-fetch' || scenario === 'repeated-start') return heldFetch.promise;
     if (scenario === 'fetch-error') throw new Error('synthetic fetch failure');
     if (scenario === 'http-error') return new Response(null, { status: 503 });
-    if (scenario === 'empty-response') return Response.json({ hits: { hits: [] } });
+    if (scenario === 'empty-response') return Response.json({ timed_out: false, _shards: { total: 1, successful: 1, failed: 0 }, hits: { hits: [] } });
     if (scenario === 'json-error') return new Response('{invalid JSON');
-    if (scenario === 'mapping-error') return Response.json({ hits: { hits: [{ _source: null }] } });
+    if (scenario === 'mapping-error') return Response.json({ timed_out: false, _shards: { total: 1, successful: 1, failed: 0 }, hits: { hits: [{ _source: null }] } });
     if (scenario === 'overlap-response') {
       const response = Response.json({});
       Object.defineProperty(response, 'json', { value: () => heldJson.promise });

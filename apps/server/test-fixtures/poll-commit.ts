@@ -66,7 +66,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const hits = dataset.filter(item => !gt || item.timestamp > gt)
     .toSorted((a, b) => b.timestamp.localeCompare(a.timestamp))
     .slice(0, 100).map(_source => ({ _source }));
-  return Response.json({ hits: { hits } });
+  return Response.json({ timed_out: false, _shards: { total: 1, successful: 1, failed: 0 }, hits: { hits } });
 }) as typeof fetch;
 
 let scoreHook: ((item: WazuhAlert) => Promise<void>) | undefined;
